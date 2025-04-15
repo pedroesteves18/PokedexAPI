@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "backpack_items",
+  "info": {
+    "singularName": "backpack-item",
+    "pluralName": "backpack-items",
+    "displayName": "BackpackItem",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "backpack": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::backpack.backpack",
+      "inversedBy": "backpack_items"
+    },
+    "item": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::item.item",
+      "inversedBy": "backpack_items"
+    },
+    "quantity": {
+      "type": "integer",
+      "unique": false,
+      "required": true
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "items",
+  "info": {
+    "singularName": "item",
+    "pluralName": "items",
+    "displayName": "Item",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "backpack_items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::backpack-item.backpack-item",
+      "mappedBy": "item"
+    }
+  }
+}

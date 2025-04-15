@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "backpacks",
+  "info": {
+    "singularName": "backpack",
+    "pluralName": "backpacks",
+    "displayName": "Backpack"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "backpack"
+    },
+    "backpack_items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::backpack-item.backpack-item",
+      "mappedBy": "backpack"
+    }
+  }
+}
