@@ -16,5 +16,19 @@ module.exports = {
    * This gives you an opportunity to set up your data model,
    * run jobs, or perform some special logic.
    */
-  bootstrap(/*{ strapi }*/) {},
+  bootstrap({ strapi }) {
+    /*
+    const plugin = strapi.plugin('upload')
+    const originalUpload = plugin.services['upload'].upload
+     
+    plugin.services['upload'].upload = async (args) => {
+
+      const result = await originalUpload(args)
+
+      result[0].edwadwadadawdwa = true
+      return result
+
+    }
+      */
+},
 };

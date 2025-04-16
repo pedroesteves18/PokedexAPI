@@ -2,10 +2,20 @@ module.exports = {
     routes : [
         {
             method: 'GET',
-            path: '/trainer/:id/pokemons',
+            path: '/trainer/pokemons',
             handler: 'pokemon-pokedex.list',
             config: {
-                auth: false
+                auth: false,
+                policies: []
+            }
+        },
+        {
+            method: 'POST',
+            path: '/trainer/pokemon',
+            handler: 'pokemon-pokedex.addPokemon',
+            config: {
+                auth: false,
+                policies: []
             }
         }
     ]

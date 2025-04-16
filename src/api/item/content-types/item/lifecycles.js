@@ -2,10 +2,8 @@ const { errors } = require('@strapi/utils');
 const { ApplicationError } = errors;
 
 module.exports = {
-
     async beforeCreate(event) {
-
-            const { data } = event.params
+            const {data} = event.params
             if (!data.name) {
                 throw new ApplicationError('Item name is required!')
             }
@@ -14,7 +12,7 @@ module.exports = {
                 const existingItems = await strapi.documents('api::item.item').findMany({
                     filters: {
                         name: {
-                            $eqi: data.name
+                            $eqi:data.name
                         }
                     }
                 })
@@ -28,5 +26,4 @@ module.exports = {
                 throw error
             }
         }
-        
 }

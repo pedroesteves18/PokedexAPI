@@ -514,7 +514,7 @@ export interface ApiPokemonPokedexPokemonPokedex
     singularName: 'pokemon-pokedex';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
