@@ -1,33 +1,39 @@
 
 module.exports = {
-    
-    async haveToken(ctx){
-        let token = await ctx.request.headers.authorization
-        if(!token){
-            return false
+    async verifyBody(ctx){
+        try {
+            const {quantity,itemId} = ctx.request.body
+            console.log(quantity,itemId)
+            if(!quantity || quantity <= 0 || !itemId){
+                throw new Error('Invalid body!')
+            }
+            return {quantity,itemId}
+        } catch (error) {
+            throw error;
         }
-        token = token.split(' ')[1]
-        const decoded = await strapi.plugins['users-permissions'].services.jwt.verify(token)
-        return decoded.id
     },
     async verifyBackpack(userId){
         try {
             const user = await strapi.entityService.findOne('plugin::users-permissions.user',userId,{
                 populate: {backpack:true},
             })
+            if(!user){
+                throw new Error('User not found!')
+            }
             return user;
         } catch (error) {
-            console.error('Error verifying backpack:', error.message);
-            return null;
+            throw error;
         }
     },
     async verifyItem(itemId){
         try {
             const foundItem = await strapi.entityService.findOne('api::item.item', parseInt(itemId));
+            if(!foundItem){
+                throw new Error('Item not found!')
+            }
             return foundItem;
         } catch (error) {
-            console.error('Error verifying item:', error.message);
-            return null;
+            throw error;
         }
     },
     async verifyItemInBackpack(backpackId,foundItem,quantity){
@@ -67,6 +73,9 @@ module.exports = {
     },
     async updateBackpackItem(backpackItem,quantity){
         try {
+            if(backpackItem[0].quantity + parseInt(quantity) > 99){
+                throw new Error('User can not add more items in their backpack! The maximum is 99!')
+            }
             const updatedItem = await strapi.entityService.update('api::backpack-item.backpack-item',backpackItem[0].id,{
                 data:{
                     quantity: (backpackItem[0].quantity + parseInt(quantity))
@@ -88,12 +97,12 @@ module.exports = {
             });
 
             if(backpackItem.length === 0){
-                return false
+                throw new Error('Item not found in backpack!')
             }else{
                 let newQuantity = backpackItem[0].quantity - parseInt(quantity)
                 if(newQuantity <= 0){
                     await strapi.entityService.delete('api::backpack-item.backpack-item',backpackItem[0].id)
-                    return undefined
+                    return false
                 }
                 await strapi.entityService.update('api::backpack-item.backpack-item',backpackItem[0].id,{
                     data:{

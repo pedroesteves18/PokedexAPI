@@ -24,7 +24,8 @@ module.exports = {
                   data: {
                     type1: pokemon.type1,
                     type2: pokemon.type2,
-                    name: pokemon.name
+                    name: pokemon.name,
+                    evolutionLevel: pokemon.evolutionLevel
                   }
                 })
           }))

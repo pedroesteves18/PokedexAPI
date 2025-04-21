@@ -4,61 +4,77 @@ const backpack = require("../../backpack/controllers/backpack");
 module.exports = {
     async verifyData(data){
         if (!data.email || !data.password || !data.username) {
-            return false
-          }
-          let email = data.email
-          const usedEmail = await strapi.db.query('plugin::users-permissions.user').findOne({
+            throw new Error('Email, username and password are required!');
+        }
+        let email = data.email
+        const usedEmail = await strapi.db.query('plugin::users-permissions.user').findOne({
             where: { email }
-          });
+        });
 
-          if (usedEmail != null) {
-            return true
-          }
-          return null
+        if (usedEmail != null) {
+            throw new Error('Email already in use!');
+        }
+        return true;
     },
-    async createUser(data,ctx){
-        let {email,password,username} = data
-
-        const newPokedex = await strapi.entityService.create('api::pokedex.pokedex',{
+    async createBackpackPokedex(){
+        let newPokedex = await strapi.entityService.create('api::pokedex.pokedex',{
             data: {}
         })  
 
-        const newBackpack = await strapi.entityService.create('api::backpack.backpack',{
+
+        let newBackpack = await strapi.entityService.create('api::backpack.backpack', {
             data: {}
-        })
+        });
+        return {newPokedex,newBackpack}
+    },
+    async createUser(data, ctx){
+        try {
+            let {email, password, username} = data
 
-        let newUser = await strapi.service('plugin::users-permissions.user').add({
-            email,
-            password,
-            username,
-            confirmed: true,
-            pokedex: newPokedex.id,
-            backpack: newBackpack.id
-            ,
-            populate:['pokedex','backpack']
-        })
-        await strapi.entityService.update('api::pokedex.pokedex', newPokedex.id, {
-            data: {
-                user: newUser.id
-            }
-        })
-    
-        await strapi.entityService.update('api::backpack.backpack', newBackpack.id, {
-            data: {
-                user: newUser.id
-            }
-        })
+            let {newPokedex,newBackpack} = await this.createBackpackPokedex()
 
-        if (!newUser) {
-            return ctx.internalServerError('Error while registering User');
+
+            let newUser = await strapi.plugins['users-permissions'].services.user.add({
+                email,
+                username,
+                password,
+                provider: 'local',
+                confirmed: true,
+                blocked: false,
+                role: 1
+            })
+
+            if (!newUser) {
+                throw new Error('Failed to create user');
+            }
+
+            newUser = await strapi.plugins['users-permissions'].services.user.edit(newUser.id, {
+                pokedex: newPokedex.id,
+                backpack: newBackpack.id
+            })
+            
+            newPokedex = await strapi.entityService.update('api::pokedex.pokedex', newPokedex.id, {
+                data: {
+                    user: newUser.id
+                }
+            })
+
+            newBackpack = await strapi.entityService.update('api::backpack.backpack', newBackpack.id, {
+                data: {
+                    user: newUser.id
+                }
+            })
+
+
+            return newUser;
+        } catch (error) {
+            console.error('Error in createUser:', error);
+            throw error;
         }
-        return newUser
-
-
     },
     async verifyLogin(data){
         if (!data.email || !data.password) {
-            return false
+            throw new Error('Email and password are required!');
         }
         let email = data.email
         const user = await strapi.query('plugin::users-permissions.user').findOne({
@@ -66,24 +82,18 @@ module.exports = {
         })
 
         if (!user) {
-            return null
+            throw new Error('Invalid credentials');
         }
 
         const isValidPassword = await strapi.plugins['users-permissions'].services.user.validatePassword(data.password, user.password);
 
+        const jwt = strapi.plugins['users-permissions'].services.jwt.issue({
+            id: user.id
+        });
+
         if (!isValidPassword) {
-            return undefined
+            throw new Error('Invalid credentials');
         }
-        return user
-    },
-    async haveToken(ctx){
-        let token = await ctx.request.headers.authorization
-        console.log(token)
-        if(!token){
-            return false
-        }
-        token = token.split(' ')[1]
-        const decoded = await strapi.plugins['users-permissions'].services.jwt.verify(token)
-        return decoded.id
-    },
+        return {user,jwt}
+    }
 }

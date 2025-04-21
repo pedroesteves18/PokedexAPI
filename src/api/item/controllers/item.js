@@ -10,7 +10,13 @@ module.exports = {
         { name: 'Poké ball' },
         { name: 'Great ball' },
         { name: 'Super ball' },
-        { name: 'Ultra ball' }
+        { name: 'Ultra ball' },
+        { name: 'Fire stone' },
+        { name: 'Water stone' },
+        { name: 'Thunder stone' },
+        { name: 'Leaf stone' },
+        { name: 'Moon stone' }
+        
       ];
   
       try {

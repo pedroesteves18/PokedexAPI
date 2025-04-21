@@ -4,7 +4,6 @@ const { ApplicationError } = errors;
 module.exports = {
 	async beforeCreate(event) {
 		let { data } = event.params;
-		console.log(data);
 		if (!data.pokemonId) {
 			throw new ApplicationError("Pokemon ID is needed!");
 		}
@@ -20,7 +19,7 @@ module.exports = {
 			const pokemon = await strapi.entityService.findOne(
 				"api::pokemon.pokemon",
 				data.pokemonId
-			);
+			)
 			if (!pokemon) {
 				throw new ApplicationError("Pokemon not found!");
 			}
@@ -38,7 +37,11 @@ module.exports = {
 				{
 					populate: ["pokedex"],
 				}
-			);
+			)
+			console.log(pokemon)
+			if(!pokemon){
+				throw new ApplicationError("Pokemon not found!");
+			}
 
 			const currentTrainer = await strapi.entityService.findOne(
 				"plugin::users-permissions.user",
@@ -46,10 +49,10 @@ module.exports = {
 				{
 					populate: ["pokedex"],
 				}
-			);
+			)
 
 			if (currentTrainer.id !== data.trainerId) {
-				throw new ApplicationError("Você não é o dono deste Pokémon!");
+				throw new ApplicationError("You are not the owner of this Pokemon!");
 			}
 		}
 	},

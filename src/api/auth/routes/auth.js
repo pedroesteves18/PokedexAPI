@@ -1,11 +1,13 @@
+'use strict';
+
 module.exports = {
-    routes : [
+    routes: [
         {
             method: 'GET',
             path: '/users',
             handler: 'auth.listUsers',
             config: {
-                auth: false
+                policies: ['global::isOwner']
             }
         },
         {
@@ -21,25 +23,16 @@ module.exports = {
             path: '/login',
             handler: 'auth.login',
             config: {
-              auth: false
+                auth: false
             }
-          },
-
-          {
-            method: 'POST',
-            path: '/protected',
-            handler: 'auth.protectedRoute',
+        },
+        {
+            method: 'GET',
+            path: '/me',
+            handler: 'auth.me',
             config: {
-              policies: ['global::jwtPolicy']
+                policies: ['global::isOwner']
             }
-          },
-          {
-            method: 'POST',
-            path: '/test',
-            handler: 'auth.test',
-            config: {
-              auth: false
-            }
-          }
+        }
     ]
-}
+};

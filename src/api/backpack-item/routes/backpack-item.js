@@ -4,27 +4,30 @@ module.exports = {
     routes : [
         {
             method: 'POST',
-            path: '/backpack/:quantity/:itemId',
-            handler: 'backpack-item.takeItem',
+            path: '/backpack/addItem',
+            handler: 'backpack-item.addItem',
             config: {
-                auth: false
+                policies: ['global::isOwner']
             }
+
         },
         {
-            method: 'DELETE',
-            path: '/backpack/:quantity/:itemId',
+            method: 'PUT',
+            path: '/backpack/dropItem',
             handler: 'backpack-item.dropItem',
             config: {
-                auth: false
+                policies: ['global::isOwner']
             }
+
         },
         {
             method: 'GET',
-            path:'/backpack/items',
+            path:'/backpack/getItems',
             handler: 'backpack-item.getUserItems',
             config: {
-                auth: false
+                policies: ['global::isOwner']
             }
+
         }
     ]
 }

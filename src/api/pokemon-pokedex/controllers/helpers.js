@@ -2,28 +2,15 @@ const { errors } = require("@strapi/utils");
 const { ApplicationError } = errors;
 
 module.exports = {
-	async haveToken(ctx) {
-		let token = await ctx.request.headers.authorization;
-		if (!token) {
-			return false;
-		}
-		token = token.split(" ")[1];
-		const decoded =
-			await strapi.plugins["users-permissions"].services.jwt.verify(
-				token
-			);
-		return decoded.id;
-	},
 	async getTrainer(ctx) {
 		try {
-			const trainerId = await this.haveToken(ctx);
-			const trainer = await strapi.entityService.findOne(
-				"plugin::users-permissions.user",
-				trainerId,
+			const trainerId = ctx.state.user.id
+			const trainer = await strapi.entityService.findOne("plugin::users-permissions.user",trainerId,
 				{
 					populate: ["pokedex"],
 				}
-			);
+			)
+
 			if (!trainer) {
 				throw new ApplicationError("Trainer not found!");
 			} else {
@@ -33,31 +20,6 @@ module.exports = {
 			return ctx.badRequest("Error getting trainer: " + error.message);
 		}
 	},
-	async deletePokemon(ctx, trainer, pokemonId) {
-		try {
-			let pokemons = await strapi.entityService.findMany(
-				"api::pokemon-pokedex.pokemon-pokedex",
-				{
-					filters: {
-						pokedex: trainer.pokedex.id,
-					},
-				}
-			);
-			console.log(pokemons);
-			for (const pokemon of pokemons) {
-				if (pokemon.id === pokemonId) {
-					await strapi.entityService.delete(
-						"api::pokemon-pokedex.pokemon-pokedex",
-						pokemonId
-					);
-					return true;
-				}
-			}
-			return null;
-		} catch (error) {
-			return ctx.badRequest("Error deleting pokemon: " + error.message);
-		}
-	},
 	async getOtherTrainer(otherTrainerId) {
 		let otherTrainer = await strapi.entityService.findOne(
 			"plugin::users-permissions.user",
@@ -65,11 +27,11 @@ module.exports = {
 			{
 				populate: ["pokedex"],
 			}
-		);
+		)
 		if (!otherTrainer) {
-			return false;
+			throw new ApplicationError("Other trainer not found!");
 		} else {
-			return otherTrainer;
+			return otherTrainer
 		}
 	},
 
@@ -81,17 +43,19 @@ module.exports = {
 					pokedex: trainer.pokedex.id,
 				},
 			}
-		);
+		)
+		console.log(pokemons)
 
 		if (pokemons.length === 0) {
-			return false;
+			throw new ApplicationError("Trainer has no Pokemons to send");
 		}
 
 		for (const pokemon of pokemons) {
 			if (pokemon.id === pokemonId) {
-				let otherTrainer = await this.getOtherTrainer(otherTrainerId);
+				let otherTrainer = await this.getOtherTrainer(otherTrainerId)
+
 				if (otherTrainer.id != trainer.id) {
-					await strapi.entityService.update(
+					let sendedPokemon =await strapi.entityService.update(
 						"api::pokemon-pokedex.pokemon-pokedex",
 						pokemonId,
 						{
@@ -101,13 +65,28 @@ module.exports = {
 								otherTrainerId: otherTrainer.id,
 							},
 						}
-					);
-					return true;
+					)
+					
+					return sendedPokemon
 				}
-				return false;
+				throw new ApplicationError("Trainer can not send pokemon to himself!");
 			}
-			return undefined;
+			throw new ApplicationError("Pokemon not found in the trainer Pokedex");
 		}
-		return null;
+		throw new ApplicationError("Pokemon not found in the trainer Pokedex");
 	},
+	async evolvePokemon(pokemonId,trainer){
+		try {
+			let pokemons = await strapi.entityService.findMany("api::pokemon-pokedex.pokemon-pokedex", {
+				populate: ["pokemon","pokedex"],
+			  })
+			for(const pokemon of pokemons){
+				if(pokemon.id === parseInt(pokemonId)){
+					console.log(pokemon)
+				}
+			}
+		} catch (error) {
+			throw error;
+		}
+	}
 };
