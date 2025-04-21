@@ -26,6 +26,14 @@ module.exports = {
 		},
 		{
 			method: "POST",
+			path: "/trainer/pokemon/gainXp",
+			handler: "pokemon-pokedex.gainXp",
+            config: {
+                policies: ['global::isOwner']
+            }
+		},
+		{
+			method: "POST",
 			path: "/trainer/pokemon/evolve",
 			handler: "pokemon-pokedex.evolvePokemon",
             config: {

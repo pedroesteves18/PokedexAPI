@@ -2,6 +2,33 @@ const { errors } = require("@strapi/utils");
 const { ApplicationError } = errors;
 
 module.exports = {
+	async afterUpdate(event){
+		const {data,where} = event.params
+		console.log(data)
+		if(data.level >= data.pokemon.set[0].evolutionLevel && data.pokemon.set[0].evolutionLevel < 99){
+			let nextId = data.pokemon.set[0].id + 2
+			let nextPokemon = await strapi.entityService.findOne('api::pokemon.pokemon',nextId)
+
+			let evolvedPokemon =await strapi.entityService.update('api::pokemon-pokedex.pokemon-pokedex',data.id,{
+				data: {
+					id: data.id,
+					nickname: data.nickname,
+					level: data.level,
+					pokemon: {
+						id: nextPokemon.id,
+						name: nextPokemon.name,
+						type1: nextPokemon.type1,
+						type2: nextPokemon.type2,
+						evolutionLevel: nextPokemon.evolutionLevel
+					}
+				},
+				populate: ["pokemon"]
+			})
+
+			return evolvedPokemon
+		}
+
+	},
 	async beforeCreate(event) {
 		let { data } = event.params;
 		if (!data.pokemonId) {
@@ -29,8 +56,12 @@ module.exports = {
 	},
 	async beforeUpdate(event) {
 		const { data, where } = event.params;
+		if(data.level){
 
-		if (data.pokedex && data.trainerId && data.otherTrainerId) {
+		}
+
+
+		if (data.pokedex && data.trainerId) {
 			const pokemon = await strapi.entityService.findOne(
 				"api::pokemon-pokedex.pokemon-pokedex",
 				where.id,
@@ -38,7 +69,7 @@ module.exports = {
 					populate: ["pokedex"],
 				}
 			)
-			console.log(pokemon)
+
 			if(!pokemon){
 				throw new ApplicationError("Pokemon not found!");
 			}
