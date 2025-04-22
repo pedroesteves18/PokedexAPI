@@ -42,51 +42,47 @@ module.exports = {
 				filters: {
 					pokedex: trainer.pokedex.id,
 				},
+				populate: ["pokemon"]
 			}
 		)
-		console.log(pokemons)
 
 		if (pokemons.length === 0) {
 			throw new ApplicationError("Trainer has no Pokemons to send");
 		}
 
-		for (const pokemon of pokemons) {
-			if (pokemon.id === pokemonId) {
-				let otherTrainer = await this.getOtherTrainer(otherTrainerId)
-
-				if (otherTrainer.id != trainer.id) {
-					let sendedPokemon =await strapi.entityService.update(
-						"api::pokemon-pokedex.pokemon-pokedex",
-						pokemonId,
-						{
-							data: {
-								pokedex: otherTrainer.pokedex.id,
-								trainerId: trainer.id,
-								otherTrainerId: otherTrainer.id,
-							},
-						}
-					)
-					
-					return sendedPokemon
-				}
-				throw new ApplicationError("Trainer can not send pokemon to himself!");
-			}
-			throw new ApplicationError("Pokemon not found in the trainer Pokedex");
-		}
-		throw new ApplicationError("Pokemon not found in the trainer Pokedex");
+		return await this.updatePokemon(pokemonId,pokemons,otherTrainerId)
 	},
-	async evolvePokemon(pokemonId,trainer){
-		try {
-			let pokemons = await strapi.entityService.findMany("api::pokemon-pokedex.pokemon-pokedex", {
-				populate: ["pokemon","pokedex"],
-			  })
-			for(const pokemon of pokemons){
-				if(pokemon.id === parseInt(pokemonId)){
-					console.log(pokemon)
-				}
+	async updatePokemon(pokemonId,pokemons,otherTrainerId){
+		for (const pokemon of pokemons) {
+
+			if (pokemon.id === pokemonId) {
+
+				let otherTrainer = await this.getOtherTrainer(otherTrainerId)
+				let sendedPokemon =await strapi.entityService.update(
+					"api::pokemon-pokedex.pokemon-pokedex",
+					pokemonId,
+					{
+						data: {
+							pokedex: {
+								id: otherTrainer.pokedex.id
+							},
+							pokemon: {
+								id: pokemon.pokemon.id,
+								name: pokemon.pokemon.name,
+								type1: pokemon.pokemon.type1,
+								type2: pokemon.pokemon.type2,
+								evolutionLevel: pokemon.pokemon.evolutionLevel
+							},
+							nickname: pokemon.nickname,
+							level: pokemon.level
+						},
+						populate: ["pokedex","pokemon"]
+					}
+				)
+				return sendedPokemon
+				
 			}
-		} catch (error) {
-			throw error;
 		}
+		throw new ApplicationError("Pokemon not found in the trainer Pokedex")
 	}
 };

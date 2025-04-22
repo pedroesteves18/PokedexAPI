@@ -17,6 +17,36 @@ module.exports = {
 			return ctx.badRequest('Error listing users', { error: error.message });
 		}
 	},
+	async listTrainersByPokemonQuantity(ctx){
+		try {
+			const trainers = await strapi.entityService.findMany('plugin::users-permissions.user', {
+				populate: {
+					pokedex:{
+						populate: ['PokemonPokedex']
+					}
+				}
+			})
+			return ctx.send(this.sortedTrainers(trainers))
+		} catch (error) {
+			return ctx.badRequest('Error listing trainers', { error: error.message });
+		}
+	},
+	sortedTrainers(trainers){
+		let sortedTrainers = []
+
+		for(const trainer of trainers){
+			let qtdPokemons = (trainer.pokedex.PokemonPokedex.length)
+			sortedTrainers.push({
+				id: trainer.id,
+				username: trainer.username,
+				email: trainer.email,
+				pokemonCount: qtdPokemons
+			})
+		}
+
+		return sortedTrainers.sort((a,b)=>b.pokemonCount - a.pokemonCount).slice(0,5)
+
+	},
 
 	async createUser(ctx) {
 		try {

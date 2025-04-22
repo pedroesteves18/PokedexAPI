@@ -70,7 +70,7 @@ module.exports = {
 				otherTrainerId
 			);
 
-			return ctx.send('Pokemon sended to the other trainer: ' + sendedPokemon)
+			return ctx.send('Pokemon was sent to the other trainer')
 		} catch (error) {
 			ctx.badRequest(
 				"Error sending pokemon to the trainer: " + error.message
@@ -127,56 +127,4 @@ module.exports = {
 			ctx.badRequest(error.message)
 		}
 	},
-
-
-
-	async evolvePokemon(ctx){
-		try {
-			let {pokemonId} = ctx.request.body
-			
-			let trainer = await helpers.getTrainer(ctx)
-			let trainerId = trainer.id
-			trainer = await strapi.entityService.findOne(
-				"plugin::users-permissions.user",
-				trainerId,
-				{
-					populate: {
-						pokedex: {
-							populate: {
-								PokemonPokedex: {
-									populate: ["pokemon"],
-								},
-							},
-						},
-					},
-				}
-			)
-			let pokemonPokedex = trainer.pokedex.PokemonPokedex
-			for(const pokemon of pokemonPokedex){
-				if(pokemon.id === parseInt(pokemonId)){
-
-					if(pokemon.level >= pokemon.pokemon.evolutionLevel && pokemon.pokemon.evolutionLevel < 99){
-
-						let nextPokemon = await strapi.entityService.findOne('api::pokemon.pokemon',(pokemon.pokemon.id + 2))
-
-						let evolvedPokemon =await strapi.entityService.update('api::pokemon-pokedex.pokemon-pokedex',pokemon.id,{
-							data: {
-								pokemon: nextPokemon.id
-							},
-							populate: ["pokemon"]
-						})
-
-						return ctx.send(`${pokemon.nickname || pokemon.pokemon.name} evolved to ${nextPokemon.name}`) 
-					}
-					if(pokemon.pokemon.evolutionLevel === 99){
-                        throw new ApplicationError('Pokemon has no more evolutions!')
-					}
-					throw new ApplicationError('Pokemon has no level to evolve!')
-				}
-			}
-			throw new ApplicationError('Pokemon not found!')
-		} catch (error) {
-			return ctx.badRequest(error.message)
-		}
-	}
 };

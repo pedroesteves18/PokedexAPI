@@ -31,14 +31,6 @@ module.exports = {
             config: {
                 policies: ['global::isOwner']
             }
-		},
-		{
-			method: "POST",
-			path: "/trainer/pokemon/evolve",
-			handler: "pokemon-pokedex.evolvePokemon",
-            config: {
-                policies: ['global::isOwner']
-            }
 		}
 	],
 };

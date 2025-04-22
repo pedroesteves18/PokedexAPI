@@ -33,6 +33,14 @@ module.exports = {
             config: {
                 policies: ['global::isOwner']
             }
+        },
+        {
+            method: 'GET',
+            path: '/trainers/ranking',
+            handler: 'auth.listTrainersByPokemonQuantity',
+            config: {
+                auth: false
+            }
         }
     ]
 };
