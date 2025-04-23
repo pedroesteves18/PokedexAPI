@@ -4,35 +4,34 @@ const { ApplicationError } = errors;
 module.exports = {
 	async afterUpdate(event) {
 		const { data, where } = event.params;
-
+		
 		if (event.state.oldPokemon.level < data.level) {
-			if (
-				data.level >= data.pokemon.set[0].evolutionLevel &&
-				data.pokemon.set[0].evolutionLevel < 99
-			) {
-				let nextId = data.pokemon.set[0].id + 2;
+
+			let pokemonEvolving = await strapi.entityService.findOne("api::pokemon-pokedex.pokemon-pokedex",
+				data.id,
+				{ populate: { pokemon: true } }
+			);
+
+			if (pokemonEvolving.level >= pokemonEvolving.pokemon.evolutionLevel &&pokemonEvolving.pokemon.evolutionLevel < 99) {
+				let nextId = pokemonEvolving.pokemon.id + 2;
 				let nextPokemon = await strapi.entityService.findOne(
 					"api::pokemon.pokemon",
 					nextId
 				);
-				console.log(nextPokemon);
-				let evolvedPokemon = await strapi
-					.documents("api::pokemon-pokedex.pokemon-pokedex")
-					.update({
-						documentId: data.id,
+
+				let evolvedPokemon = await strapi.entityService.update("api::pokemon-pokedex.pokemon-pokedex",
+						data.id,
+						{
 						data: {
-							nickname: data.nickname,
-							level: data.level,
-							pokemon: {
-								id: nextPokemon.id,
-								name: nextPokemon.name,
-								type1: nextPokemon.type1,
-								type2: nextPokemon.type2,
-								evolutionLevel: nextPokemon.evolutionLevel,
-							},
+							id: pokemonEvolving.id,
+							nickname: pokemonEvolving.nickname,
+							level: pokemonEvolving.level,
+							pokemon: nextPokemon.id
 						},
 						populate: { pokemon: true },
 					});
+
+				return
 			}
 		}
 
@@ -99,6 +98,7 @@ module.exports = {
 	},
 	async beforeUpdate(event) {
 		const { data, where } = event.params;
+
 		let oldPokemonPokedex = await strapi.entityService.findOne(
 			"api::pokemon-pokedex.pokemon-pokedex",
 			where.id,
@@ -110,11 +110,13 @@ module.exports = {
 				},
 			}
 		);
+
 		event.state.oldPokemon = oldPokemonPokedex;
 		event.state.originalUser = oldPokemonPokedex.pokedex.user;
 		if (!data.pokedex) {
 			return;
 		}
+		console.log('Data:' ,data);
 		let newUser = await strapi.entityService.findOne(
 			"api::pokedex.pokedex",
 			data.pokedex.set[0].id,

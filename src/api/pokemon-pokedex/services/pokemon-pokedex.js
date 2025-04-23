@@ -113,8 +113,8 @@ module.exports = {
 			for (const pokemon of trainerPokemons) {
 				if (pokemon.id === parseInt(pokemonId)) {
 					if (pokemon.level <= 99) {
-						let updatedPokemon = await this.giveXp(pokemonId);
-						console.log(updatedPokemon);
+
+						let updatedPokemon = await this.giveXp(pokemon.id);
 						return {
 							message: `${pokemon.nickname || pokemon.pokemon.name} gained 1 level!The pokemon level is: ${updatedPokemon.level}`,
 						};
@@ -166,16 +166,7 @@ module.exports = {
 							quantity: newQuantity,
 						},
 					}
-				);
-				await strapi.entityService.update(
-					"api::pokemon-pokedex.pokemon-pokedex",
-					pokemonId,
-					{
-						data: {
-							level: 99,
-						},
-					}
-				);
+				)
 			}
 
 			let pokemon = await strapi.entityService.findOne(
@@ -185,23 +176,21 @@ module.exports = {
 					populate: ["pokemon"],
 				}
 			);
-			console.log(pokemon);
-			let updatedPokemon = await strapi
-				.documents("api::pokemon-pokedex.pokemon-pokedex")
-				.update(pokemon.id, {
-					data: {
-						nickname: pokemon.nickname,
-						level: pokemon.level + 1,
-						pokemon: {
-							id: pokemon.pokemon.id,
-							name: pokemon.pokemon.name,
-							type1: pokemon.pokemon.type1,
-							type2: pokemon.pokemon.type2,
-							evolutionLevel: pokemon.pokemon.evolutionLevel,
-						},
-					},
-					populate: ["pokemon", "pokedex"],
-				});
+
+			let updatedPokemon = await strapi.entityService.update(
+				"api::pokemon-pokedex.pokemon-pokedex", 
+				pokemon.id, 
+				{
+				  data: {
+					id: pokemon.id,
+					nickname: pokemon.nickname,
+					level: pokemon.level + 1,
+					pokemon: pokemon.pokemon.id
+				  },
+				  populate: { pokemon: true },
+				}
+			  );
+
 			return updatedPokemon;
 		} catch (error) {
 			throw new ApplicationError(
@@ -229,6 +218,7 @@ module.exports = {
 							populate: ["backpack"],
 						}
 					);
+
 					let items = await strapi.entityService.findMany(
 						"api::backpack-item.backpack-item",
 						{
@@ -240,16 +230,19 @@ module.exports = {
 					);
 
 					for (const item of items) {
+
 						if (item.item.name === pokemon[1]) {
 							let updatedPokemon = await this.giveXp(
 								pokemonId,
 								item
 							);
+							console.log('Updated Pokemon:' ,updatedPokemon);
 							let nextPokemon =
 								await strapi.entityService.findOne(
 									"api::pokemon.pokemon",
 									pokemonById.pokemon.id + 2
 								);
+	
 							updatedPokemon = await strapi.entityService.update(
 								"api::pokemon-pokedex.pokemon-pokedex",
 								pokemonId,
@@ -258,20 +251,24 @@ module.exports = {
 										id: pokemonId,
 										nickname: updatedPokemon.nickname,
 										level: nextPokemon.level,
-										pokemon: {
-											id: nextPokemon.id,
-											name: nextPokemon.name,
-											type1: nextPokemon.type1,
-											type2: nextPokemon.type2,
-											evolutionLevel:
-												nextPokemon.evolutionLevel,
-										},
+										pokemon: nextPokemon.id
 									},
-									populate: ["pokemon", "pokedex"],
+									populate: ["pokemon"],
 								}
-							);
+							)
+							let afterEvolve = await strapi.entityService.findOne(
+								"api::pokemon-pokedex.pokemon-pokedex",
+								pokemonId,
+								{
+									populate: ["pokemon"],
+								}
+							)
+
+
+								
+							console.log('Updated Pokemon teste:' ,updatedPokemon);
 							return {
-								message: `${pokemonById.pokemon.name} needs a ${pokemon[1]} to evolve!You evolved to ${updatedPokemon.pokemon.name}`,
+								message: `${pokemonById.pokemon.name} needs a ${pokemon[1]} to evolve!Your ${pokemonById.pokemon.name} evolved to ${nextPokemon.name}`,
 								pokemonId: pokemonById.id,
 							};
 						}

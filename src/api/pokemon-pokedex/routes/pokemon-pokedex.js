@@ -25,7 +25,7 @@ module.exports = {
 			},
 		},
 		{
-			method: "POST",
+			method: "PUT",
 			path: "/trainer/pokemon/gainXp",
 			handler: "pokemon-pokedex.gainXp",
 			config: {
@@ -33,7 +33,7 @@ module.exports = {
 			},
 		},
 		{
-			method: "POST",
+			method: "PUT",
 			path: "/trainer/pokemon/evolve",
 			handler: "pokemon-pokedex.evolvePokemon",
 			config: {
